@@ -1,13 +1,13 @@
 //
 // Created by Yonatan Elbaz on 09/06/2023.
 //
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+
 
 #ifndef OS_HW3_QUEUE_H
 #define OS_HW3_QUEUE_H
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 
 typedef struct queue{

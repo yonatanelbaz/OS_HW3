@@ -1,6 +1,9 @@
 //
 // Created by Yonatan Elbaz on 07/06/2023.
 //
+#ifndef OS_HW3_QUEUE_C
+#define OS_HW3_QUEUE_C
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -131,3 +134,4 @@ void print_queue(Queue *q){
     print_queue(q);
     return 0;
 }*/
+#endif //OS_HW3_QUEUE_C

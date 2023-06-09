@@ -1,6 +1,9 @@
 #include "segel.h"
 #include "request.h"
-#include "queue.c"
+#include "queue.h"
+
+pthread_cond_t cond;
+pthread_mutex_t mutex;
 
 // 
 // server.c: A very, very simple web server
@@ -20,14 +23,42 @@ void getargs(int *port, int argc, char *argv[])
 	exit(1);
     }
     *port = atoi(argv[1]);
+
+    if (atoi(argv[2]) <= 0){
+        fprintf(stderr, "Thread count must be positive\n");
+        exit(1);
+    }
 }
 
+void* HandleRequest(void* connfd){
+    return NULL;
+}
+
+void initThreadPool(pthread_t* thread_pool, int num_of_threads){
+    int i;
+    for(i = 0; i < num_of_threads; i++){
+        pthread_t tid;
+        pthread_create(&tid, NULL, HandleRequest, NULL);
+        thread_pool[i] = tid;
+    }
+}
 int main(int argc, char *argv[])
 {
-    int listenfd, connfd, port, clientlen;
+    int listenfd, connfd, port, clientlen, num_of_threads, queue_size;
     struct sockaddr_in clientaddr;
-
     getargs(&port, argc, argv);
+
+    num_of_threads = atoi(argv[2]);
+    queue_size = atoi(argv[3]);
+
+    pthread_cond_init(&cond, NULL);
+    pthread_mutex_init(&mutex, NULL);
+
+    pthread_t thread_pool = malloc(sizeof(pthread_t) * num_of_threads);
+    initThreadPool(thread_pool, argv[0][2]);
+    Queue* q;
+    init(queue_size, q);
+
 
     // 
     // HW3: Create some threads...
