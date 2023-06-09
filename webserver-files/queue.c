@@ -3,24 +3,19 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include "queue.h"
 
-struct queue{
-    int *requests;
-    int size;
-    int front;
-    int rear;
-    /*sem_t mutex;
-    sem_t slots;
-    sem_t items;*/
-};
 
-typedef struct queue Queue;
+
+//typedef struct queue Queue;
 
 void init(int size, Queue *q){
     q->requests = (int*)malloc(sizeof(int)*size);
     q->size = size;
     q->front = -1;
     q->rear = 0;
+    q->empty = true;
     /*sem_init(&queue.mutex, 0, 1);
     sem_init(&queue.slots, 0, size);
     sem_init(&queue.items, 0, 0);*/
@@ -37,8 +32,9 @@ void enqueue(int fd, Queue *q){
     q->requests[q->rear] = fd;
     q->rear = ((q->rear+1)%q->size);
     if(q->front == -1){
-        q->front = 0;
+        q->front = q->rear - 1;
     }
+    q->empty = false;
     /*sem_post(&queue.mutex);
     sem_post(&queue.items);*/
 }
@@ -46,10 +42,17 @@ void enqueue(int fd, Queue *q){
 int dequeue(Queue *q){
     /*sem_wait(&queue.items);
     sem_wait(&queue.mutex);*/
+    if(q->front == -1 || q->empty){
+        printf("queue is empty\n");
+        return -1;
+    }
     int fd = q->requests[q->front];
     q->requests[q->front] = 0;
     q->front = (q->front+1)%q->size;
-
+    if(q->front == q->rear){
+        q->front = -1;
+        q->empty = true;
+    }
     /*sem_post(&queue.mutex);
     sem_post(&queue.slots);*/
     return fd;
@@ -69,19 +72,62 @@ void print_queue(Queue *q){
 
 }
 
-int main(){
+/*int main(){
     Queue* q;
     init(5, q);
+    dequeue(q);
     enqueue(1, q);
+    print_queue(q);
     enqueue(2, q);
+    print_queue(q);
     enqueue(3, q);
+    print_queue(q);
     enqueue(4, q);
+    print_queue(q);
     enqueue(5, q);
+    print_queue(q);
     enqueue(6,q);
     print_queue(q);
     dequeue(q);
+    print_queue(q);
+    dequeue(q);
+    print_queue(q);
+    dequeue(q);
+    print_queue(q);
+    enqueue(1, q);
+    print_queue(q);
+    enqueue(2, q);
+    print_queue(q);
+    enqueue(3, q);
+    print_queue(q);
+    enqueue(4, q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    enqueue(4, q);
+    print_queue(q);
+    enqueue(1, q);
+    print_queue(q);
+    enqueue(2, q);
+    print_queue(q);
+    enqueue(3, q);
+    print_queue(q);
+    enqueue(4, q);
+    print_queue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
+    dequeue(q);
     dequeue(q);
     dequeue(q);
     print_queue(q);
+    enqueue(4, q);
+    print_queue(q);
     return 0;
-}
+}*/

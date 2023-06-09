@@ -1,5 +1,6 @@
 #include "segel.h"
 #include "request.h"
+#include "queue.c"
 
 // 
 // server.c: A very, very simple web server
@@ -19,49 +20,6 @@ void getargs(int *port, int argc, char *argv[])
 	exit(1);
     }
     *port = atoi(argv[1]);
-}
-
-struct {
-    int *requests;
-    int size;
-    int front;
-    int rear;
-    /*sem_t mutex;
-    sem_t slots;
-    sem_t items;*/
-}queue;
-
-void init(int size){
-    queue.requests = (int*)malloc(sizeof(int)*size);
-    queue.size = size;
-    queue.front = 0;
-    queue.rear = 0;
-    /*sem_init(&queue.mutex, 0, 1);
-    sem_init(&queue.slots, 0, size);
-    sem_init(&queue.items, 0, 0);*/
-}
-
-void enqueue(int fd){
-    /*sem_wait(&queue.slots);
-    sem_wait(&queue.mutex);*/
-    if(queue.front == queue.rear){
-        printf("queue is full\n");
-        return;
-    }
-    queue.requests[queue.rear] = fd;
-    queue.rear = (queue.rear+1)%queue.size;
-    /*sem_post(&queue.mutex);
-    sem_post(&queue.items);*/
-}
-
-int dequeue(){
-    /*sem_wait(&queue.items);
-    sem_wait(&queue.mutex);*/
-    int fd = queue.requests[queue.front];
-    queue.front = (queue.front+1)%queue.size;
-    /*sem_post(&queue.mutex);
-    sem_post(&queue.slots);*/
-    return fd;
 }
 
 int main(int argc, char *argv[])
