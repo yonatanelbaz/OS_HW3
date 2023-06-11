@@ -13,12 +13,14 @@
 
 //typedef struct queue Queue;
 
-void init(int size, Queue *q){
+Queue* init(int size){
+    Queue* q = (Queue*)malloc(sizeof(Queue));
     q->requests = (int*)malloc(sizeof(int)*size);
     q->size = size;
     q->front = -1;
     q->rear = 0;
     q->empty = true;
+    return q;
     /*sem_init(&queue.mutex, 0, 1);
     sem_init(&queue.slots, 0, size);
     sem_init(&queue.items, 0, 0);*/
@@ -27,7 +29,7 @@ void init(int size, Queue *q){
 void enqueue(int fd, Queue *q){
     /*sem_wait(&queue.slots);
     sem_wait(&queue.mutex);*/
-    if(q->front == q->rear){
+    if(is_full(q)){
         printf("queue is full\n");
         return;
     }
@@ -72,12 +74,20 @@ void print_queue(Queue *q){
         printf("%d ", q->requests[(i + q->front)%q->size]);
     }
     printf("\n");
-
 }
 
-/*int main(){
-    Queue* q;
-    init(5, q);
+bool is_full(Queue *q){
+    return q->front == q->rear;
+}
+
+bool is_empty(Queue *q){
+    return q->empty;
+}
+
+int main(){
+    Queue* q = init(5);
+    Queue* q2 = init(5);
+    print_queue(q);
     dequeue(q);
     enqueue(1, q);
     print_queue(q);
@@ -133,5 +143,5 @@ void print_queue(Queue *q){
     enqueue(4, q);
     print_queue(q);
     return 0;
-}*/
+}
 #endif //OS_HW3_QUEUE_C

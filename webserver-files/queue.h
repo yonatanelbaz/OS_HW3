@@ -21,9 +21,11 @@ typedef struct queue{
     sem_t items;*/
 }Queue;
 
-void init(int size, Queue *q);
+Queue* init(int size);
 void enqueue(int fd, Queue *q);
 int dequeue(Queue *q);
 void print_queue(Queue *q);
+bool is_full(Queue *q);
+bool is_empty(Queue *q);
 
 #endif //OS_HW3_QUEUE_H
