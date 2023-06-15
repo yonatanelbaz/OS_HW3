@@ -33,11 +33,10 @@ void enqueue(int fd, Queue *q){
         printf("queue is full\n");
         return;
     }
-    printf("enqueue %d\n", fd);
     q->requests[q->rear] = fd;
     q->rear = ((q->rear+1)%q->size);
     if(q->front == -1){
-        q->front = q->rear - 1;
+        q->front = (q->rear-1)%q->size;
     }
     q->empty = false;
     /*sem_post(&queue.mutex);
@@ -45,9 +44,7 @@ void enqueue(int fd, Queue *q){
 }
 
 int dequeue(Queue *q){
-    /*sem_wait(&queue.items);
-    sem_wait(&queue.mutex);*/
-    if(q->front == -1 || q->empty){
+    if(q->empty){
         printf("queue is empty\n");
         return -1;
     }
@@ -58,8 +55,6 @@ int dequeue(Queue *q){
         q->front = -1;
         q->empty = true;
     }
-    /*sem_post(&queue.mutex);
-    sem_post(&queue.slots);*/
     return fd;
 }
 
@@ -84,64 +79,5 @@ bool is_empty(Queue *q){
     return q->empty;
 }
 
-int main(){
-    Queue* q = init(5);
-    Queue* q2 = init(5);
-    print_queue(q);
-    dequeue(q);
-    enqueue(1, q);
-    print_queue(q);
-    enqueue(2, q);
-    print_queue(q);
-    enqueue(3, q);
-    print_queue(q);
-    enqueue(4, q);
-    print_queue(q);
-    enqueue(5, q);
-    print_queue(q);
-    enqueue(6,q);
-    print_queue(q);
-    dequeue(q);
-    print_queue(q);
-    dequeue(q);
-    print_queue(q);
-    dequeue(q);
-    print_queue(q);
-    enqueue(1, q);
-    print_queue(q);
-    enqueue(2, q);
-    print_queue(q);
-    enqueue(3, q);
-    print_queue(q);
-    enqueue(4, q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    enqueue(4, q);
-    print_queue(q);
-    enqueue(1, q);
-    print_queue(q);
-    enqueue(2, q);
-    print_queue(q);
-    enqueue(3, q);
-    print_queue(q);
-    enqueue(4, q);
-    print_queue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    dequeue(q);
-    print_queue(q);
-    enqueue(4, q);
-    print_queue(q);
-    return 0;
-}
+    
 #endif //OS_HW3_QUEUE_C
