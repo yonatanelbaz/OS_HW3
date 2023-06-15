@@ -6,7 +6,7 @@ pthread_cond_t queue_cond;
 pthread_mutex_t queue_mutex;
 pthread_cond_t sum_cond;
 pthread_mutex_t sum_mutex;
-Queue* requests_queue;
+//Queue* requests_queue;
 int current_requests_num = 0;
 
 // 
@@ -34,7 +34,8 @@ void getargs(int *port, int argc, char *argv[])
     //}
 }
 
-void* HandleRequest(void* connfd){
+void* HandleRequest(void* requests_queue){
+    requests_queue = (Queue*)requests_queue;
     while(1){
         pthread_mutex_lock(&queue_mutex);
         while(is_empty(requests_queue)){
@@ -49,20 +50,21 @@ void* HandleRequest(void* connfd){
         pthread_mutex_lock(&sum_mutex);
         current_requests_num--;
         printf("current_requests_num after removal: %d\n", current_requests_num);
-        //pthread_cond_signal(&sum_cond);
+        pthread_cond_signal(&sum_cond);
         pthread_mutex_unlock(&sum_mutex);
     }
 }
 
-void initThreadPool(pthread_t* thread_pool, int num_of_threads){
+void initThreadPool(pthread_t* thread_pool, int num_of_threads, Queue* requests_queue){
     pthread_t tid;
     for(int i = 0; i < num_of_threads; i++){
-        pthread_create(&tid, NULL, HandleRequest, NULL);
+        pthread_create(&tid, NULL, HandleRequest, requests_queue);
         thread_pool[i] = tid;
     }
 }
 int main(int argc, char *argv[])
 {
+    Queue* requests_queue;
     int listenfd, connfd, port, clientlen, num_of_threads, queue_size;
     struct sockaddr_in clientaddr;
     char* policy;
@@ -71,7 +73,11 @@ int main(int argc, char *argv[])
     num_of_threads = atoi(argv[2]);
     queue_size = atoi(argv[3]);
     policy = argv[4];
-
+    int max_queue_size = -1;
+    if(strcmp(policy,"dynamic")){
+        //might cause eroor if max size not provided despite dynamic policy
+        max_queue_size = atoi(argv[5]);
+    }
 
     requests_queue = init(queue_size);
 
@@ -81,23 +87,63 @@ int main(int argc, char *argv[])
     pthread_mutex_init(&sum_mutex, NULL);
 
     pthread_t* thread_pool = (pthread_t *)malloc(sizeof(pthread_t) * num_of_threads);
-    initThreadPool(thread_pool, num_of_threads);
+    initThreadPool(thread_pool, num_of_threads, requests_queue);
 
     listenfd = Open_listenfd(port);
     while (1) {
 	    clientlen = sizeof(clientaddr);
 	    connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
 
-//        if(current_requests_num == queue_size){
-//            if(strcmp(policy,"block") == 0){
-//                //block main thread until there is a place in the queue
-//                pthread_mutex_lock(&sum_mutex);
-//                while(current_requests_num == queue_size){
-//                    pthread_cond_wait(&sum_cond, &sum_mutex);
-//                }
-//                pthread_mutex_unlock(&sum_mutex);
-//            }
-//        }
+        if(current_requests_num >= queue_size){
+            if(strcmp(policy,"block") == 0){
+                pthread_mutex_lock(&sum_mutex);
+                while(current_requests_num == queue_size){
+                    pthread_cond_wait(&sum_cond, &sum_mutex);
+                }
+                pthread_mutex_unlock(&sum_mutex);
+            }
+
+            else if(strcmp(policy,"dt") == 0 || (strcmp(policy,"dynamic") == 0 && max_queue_size <= queue_size)){
+                Close(connfd);
+                continue;
+            }
+
+            else if(strcmp(policy,"dh") == 0){
+                int removed_fd;
+                pthread_mutex_lock(&queue_mutex);
+                pthread_mutex_lock(&sum_mutex);
+                removed_fd = dequeue(requests_queue);
+                if(removed_fd != -1){
+                    close(removed_fd);
+                    current_requests_num--;
+                }
+                pthread_mutex_unlock(&sum_mutex);
+                pthread_mutex_unlock(&queue_mutex);
+            }
+
+            else if(strcmp(policy,"bf") == 0){
+                pthread_mutex_lock(&sum_mutex);
+                while(current_requests_num != 0){
+                    pthread_cond_wait(&sum_cond, &sum_mutex);
+                }
+                close(connfd);
+                pthread_mutex_unlock(&sum_mutex);
+                continue;
+            }
+
+            else if(strcmp(policy,"dynamic") == 0){
+                pthread_mutex_lock(&queue_mutex);
+                pthread_mutex_lock(&sum_mutex);
+                close(connfd);
+                Queue* temp_queue = init(queue_size+1);
+                transfer(requests_queue, temp_queue);
+                free(requests_queue);
+                requests_queue = temp_queue;
+                pthread_mutex_unlock(&sum_mutex);
+                pthread_mutex_unlock(&queue_mutex);
+            }
+        }
+
         pthread_mutex_lock(&queue_mutex);
         pthread_mutex_lock(&sum_mutex);
         enqueue(connfd, requests_queue);

@@ -39,6 +39,7 @@ void enqueue(int fd, Queue *q){
         q->front = (q->rear-1)%q->size;
     }
     q->empty = false;
+    printf("enqueued %d\n", fd);
     /*sem_post(&queue.mutex);
     sem_post(&queue.items);*/
 }
@@ -53,8 +54,10 @@ int dequeue(Queue *q){
     q->front = (q->front+1)%q->size;
     if(q->front == q->rear){
         q->front = -1;
+        q->rear = 0;
         q->empty = true;
     }
+    printf("dequeued %d\n", fd);
     return fd;
 }
 
@@ -71,6 +74,13 @@ void print_queue(Queue *q){
     printf("\n");
 }
 
+
+void transfer(Queue* q1, Queue* q2){
+    while(!is_empty(q1)){
+        enqueue(dequeue(q1), q2);
+    }
+}
+
 bool is_full(Queue *q){
     return q->front == q->rear;
 }
@@ -78,6 +88,7 @@ bool is_full(Queue *q){
 bool is_empty(Queue *q){
     return q->empty;
 }
+
 
     
 #endif //OS_HW3_QUEUE_C
