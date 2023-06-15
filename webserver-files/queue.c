@@ -26,6 +26,12 @@ Queue* init(int size){
     sem_init(&queue.items, 0, 0);*/
 }
 
+void transfer(Queue *q1, Queue *q2){
+    while(!is_empty(q1)){
+        enqueue(dequeue(q1), q2);
+    }
+}
+
 void enqueue(int fd, Queue *q){
     /*sem_wait(&queue.slots);
     sem_wait(&queue.mutex);*/
@@ -78,6 +84,31 @@ bool is_full(Queue *q){
 bool is_empty(Queue *q){
     return q->empty;
 }
+
+/*int main(){
+    //test the transfer function
+    Queue *q1 = init(5);
+    Queue *q2 = init(10);
+    enqueue(18, q2);
+    enqueue(19, q2);
+    enqueue(1, q1);
+    enqueue(2, q1);
+    enqueue(3, q1);
+    enqueue(4, q1);
+    enqueue(5, q1);
+    print_queue(q1);
+    transfer(q1, q2);
+    print_queue(q2);
+    enqueue(6, q2);
+    enqueue(7, q2);
+    enqueue(8, q2);
+    enqueue(9, q2);
+    enqueue(10, q2);
+    print_queue(q2);
+    enqueue(9, q2);
+    print_queue(q2);
+    return 0;
+}*/
 
     
 #endif //OS_HW3_QUEUE_C
