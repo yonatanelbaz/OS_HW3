@@ -27,8 +27,6 @@ Queue* init(int size){
 }
 
 void enqueue(int fd, Queue *q){
-    /*sem_wait(&queue.slots);
-    sem_wait(&queue.mutex);*/
     if(is_full(q)){
         printf("queue is full\n");
         return;
@@ -40,8 +38,6 @@ void enqueue(int fd, Queue *q){
     }
     q->empty = false;
     printf("enqueued %d\n", fd);
-    /*sem_post(&queue.mutex);
-    sem_post(&queue.items);*/
 }
 
 int dequeue(Queue *q){
@@ -66,19 +62,32 @@ void print_queue(Queue *q){
     printf("queue");
     printf(" front: %d", q->front);
     printf(" rear: %d \n ", q->rear);
-
-
     for(i = 0; i < q->size; i++){
         printf("%d ", q->requests[(i + q->front)%q->size]);
     }
     printf("\n");
 }
 
-
-void transfer(Queue* q1, Queue* q2){
-    while(!is_empty(q1)){
-        enqueue(dequeue(q1), q2);
+void increase_queue_size(Queue *q){
+    int i;
+    int count = 0;
+    int new_front = -1;
+    int *new_requests = (int*)malloc(sizeof(int)* (q->size+1));
+    if(!q->empty) {
+        new_front = 0;
+        for (i = 0; i < q->size; i++) {
+            new_requests[i] = q->requests[(i + q->front) % (q->size)];
+            if (new_requests[i] != 0) {
+                count++;
+            }
+        }
     }
+    q->rear = count;
+    q->front = new_front;
+    q->size++;
+    int* temp = q->requests;
+    q->requests = new_requests;
+    free(temp);
 }
 
 bool is_full(Queue *q){

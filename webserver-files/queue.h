@@ -27,6 +27,6 @@ int dequeue(Queue *q);
 void print_queue(Queue *q);
 bool is_full(Queue *q);
 bool is_empty(Queue *q);
-void transfer(Queue *q1, Queue *q2);
+void increase_queue_size(Queue *q);
 
 #endif //OS_HW3_QUEUE_H

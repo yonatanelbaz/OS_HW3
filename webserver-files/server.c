@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     queue_size = atoi(argv[3]);
     policy = argv[4];
     int max_queue_size = -1;
-    if(strcmp(policy,"dynamic")){
+    if(strcmp(policy,"dynamic") == 0){
         //might cause eroor if max size not provided despite dynamic policy
         max_queue_size = atoi(argv[5]);
     }
@@ -94,7 +94,9 @@ int main(int argc, char *argv[])
 	    clientlen = sizeof(clientaddr);
 	    connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *) &clientlen);
 
+
         if(current_requests_num >= queue_size){
+            printf("policy: %s\n", policy);
             if(strcmp(policy,"block") == 0){
                 pthread_mutex_lock(&sum_mutex);
                 while(current_requests_num == queue_size){
@@ -104,6 +106,8 @@ int main(int argc, char *argv[])
             }
 
             else if(strcmp(policy,"dt") == 0 || (strcmp(policy,"dynamic") == 0 && max_queue_size <= queue_size)){
+                printf("max queue size reached\n");
+                printf("max queue size: %d, queue size: %d\n", max_queue_size, queue_size);
                 Close(connfd);
                 continue;
             }
@@ -133,14 +137,12 @@ int main(int argc, char *argv[])
 
             else if(strcmp(policy,"dynamic") == 0){
                 pthread_mutex_lock(&queue_mutex);
-                pthread_mutex_lock(&sum_mutex);
                 close(connfd);
-                Queue* temp_queue = init(queue_size+1);
-                transfer(requests_queue, temp_queue);
-                free(requests_queue);
-                requests_queue = temp_queue;
-                pthread_mutex_unlock(&sum_mutex);
+                queue_size++;
+                increase_queue_size(requests_queue);
+                printf("queue size increased to %d\n", queue_size);
                 pthread_mutex_unlock(&queue_mutex);
+                continue;
             }
         }
 
